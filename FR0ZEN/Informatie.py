@@ -12,9 +12,17 @@ import os
 from pystyle import Colors, Colorate
 import platform
 import subprocess
+import sys
 
+# Function to set PuTTY (or any xterm-compatible terminal) window title
+def set_title(title: str):
+    sys.stdout.write(f"\33]0;{title}\a")
+    sys.stdout.flush()
 
-
+# Example: update window title dynamically
+for i in range(1, 6):
+    set_title(f"FR0ZEN DDoS - Time Left > {99999}")
+    time.sleep(2)  # wait 2 seconds before updating
 
 
 
@@ -216,3 +224,4 @@ while True:
     except KeyboardInterrupt:
         print("\nTerug naar het hoofdmenu...")
         time.sleep(1)  # Optionally pause before clearing the screen
+
