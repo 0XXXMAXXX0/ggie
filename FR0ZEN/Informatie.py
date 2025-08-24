@@ -13,18 +13,77 @@ from pystyle import Colors, Colorate
 import platform
 import subprocess
 import sys
+import sys
+import time
+import uuid
+import requests
+from colorama import Fore, init
+from datetime import datetime
 
-# Function to set PuTTY (or any xterm-compatible terminal) window title
+init(autoreset=True)
+
+# =========================
+# SETTINGS
+# =========================
+WHITELIST = ["E9E07C23-865C-4241-BC79-495616383634"]   # Allowed HWIDs
+BLACKLIST = ["XYZ999-BANNED-HWID"]    # Blocked HWIDs
+TIME_LIMIT = 30                       # seconds allowed
+TAB_COLOR = Fore.CYAN                 # Tab color for allowed users
+DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1392498264451842139/aaO4ISZQOkYYaqVvxlh2ZFw2oocBGO4PBaa-oRD_mODb9hZTn5o54av-G9k1S9rkOv1M"  # Replace with your webhook
+# =========================
+
+# Function to set terminal/tab title
 def set_title(title: str):
     sys.stdout.write(f"\33]0;{title}\a")
     sys.stdout.flush()
 
-# Example: update window title dynamically
-for i in range(1, 6):
-    set_title(f"FR0ZEN DDoS - Time Left > {99999}")
-    time.sleep(2)  # wait 2 seconds before updating
+# Function to get HWID
+def get_hwid():
+    return hex(uuid.getnode()).upper()
 
+# Function to log HWID to Discord
+def log_hwid_to_discord(hwid, status):
+    data = {
+        "content": f"HWID: `{hwid}` | Status: `{status}` | Time: `{datetime.utcnow()}` UTC"
+    }
+    try:
+        requests.post(DISCORD_WEBHOOK, json=data)
+    except Exception as e:
+        print(Fore.RED + f"Failed to send webhook: {e}")
 
+def main():
+    hwid = get_hwid()
+
+    # Blacklist check
+    if hwid in BLACKLIST:
+        log_hwid_to_discord(hwid, "Blacklisted")
+        print(Fore.RED + f"HWID {hwid} is blacklisted. Closing...")
+        sys.exit(0)
+
+    # Whitelist check
+    if hwid not in WHITELIST:
+        log_hwid_to_discord(hwid, "Not Whitelisted")
+        print(Fore.RED + f"HWID {hwid} is not whitelisted. Closing...")
+        sys.exit(0)
+
+    # If allowed, log and start countdown
+    log_hwid_to_discord(hwid, "Allowed")
+    print(TAB_COLOR + f"Access granted for HWID {hwid}. Time limit: {TIME_LIMIT} seconds.")
+
+    start = time.time()
+    while True:
+        elapsed = int(time.time() - start)
+        remaining = TIME_LIMIT - elapsed
+
+        if remaining < 0:
+            print(Fore.RED + "Time expired. Closing...")
+            sys.exit(0)
+
+        set_title(f"FR0ZEN DDoS - Time Left > {remaining}s")
+        time.sleep(1)
+
+if __name__ == "__main__":
+    main()
 
 
 def clear_screen():
@@ -224,4 +283,5 @@ while True:
     except KeyboardInterrupt:
         print("\nTerug naar het hoofdmenu...")
         time.sleep(1)  # Optionally pause before clearing the screen
+
 
